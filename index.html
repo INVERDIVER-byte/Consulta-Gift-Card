@@ -232,7 +232,14 @@ function render(mesKey, id, emp, meta){
     const fallados = s.dias.filter(d => !d.califica).length;
     let diasHtml = '';
     s.dias.forEach(d => {
-      const motivo = d.califica ? 'Calificó' : (d.solo_una_marcacion ? 'Solo 1 marcación' : 'Menos de 6h trabajadas');
+      const motivos = {
+        califica: 'Calificó',
+        menos_de_6h: 'Menos de 6h trabajadas',
+        falta_salida: 'Marcaste entrada pero no marcaste salida',
+        falta_entrada: 'Marcaste salida pero no marcaste entrada',
+        solo_una_marcacion: 'Solo tienes 1 marcación ese día',
+      };
+      const motivo = motivos[d.motivo] || (d.califica ? 'Calificó' : 'No calificó');
       diasHtml += `<div class="dia-row ${d.califica ? 'ok' : 'no'}"><span class="dia-fecha">${d.fecha}</span><span class="dia-motivo">${motivo} · ${d.horas}</span><span class="dia-monto">${money(d.venta_asignada)}</span></div>`;
     });
     sucHtml += `
