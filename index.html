@@ -74,6 +74,23 @@
   .nota{font-size:12px;color:var(--texto-suave);background:var(--fondo);border-radius:8px;padding:10px 12px;margin-top:10px;line-height:1.5;}
   .footer-note{text-align:center;font-size:11px;color:#8B95A3;margin-top:20px;}
   .sin-datos{text-align:center;padding:30px 10px;color:var(--texto-suave);font-size:13.5px;}
+
+  .total-box{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--azul-1);color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:14px;
+  }
+  .total-box .lbl{font-size:12px;color:#C7D3E3;}
+  .total-box .num{font-size:22px;font-weight:700;}
+
+  .stat-destacado{background:var(--verde-fondo)!important;border:1.5px solid var(--verde);}
+  .stat-destacado .num{color:var(--verde)!important;font-size:23px!important;}
+  .stat-destacado .lbl{color:var(--verde)!important;font-weight:700;}
+
+  table.tabla-rangos{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px;}
+  table.tabla-rangos th{background:var(--azul-1);color:#fff;padding:7px 8px;font-size:11px;text-align:left;}
+  table.tabla-rangos td{padding:7px 8px;border-bottom:1px solid var(--linea);}
+  table.tabla-rangos tr.fila-actual td{background:var(--verde-fondo);font-weight:700;color:var(--verde);}
+  table.tabla-rangos tr.fila-actual td:first-child{border-left:3px solid var(--verde);}
 </style>
 </head>
 <body>
@@ -244,6 +261,24 @@ function render(mesKey, id, emp, meta){
     trackHtml += `<div class="${cls}"></div>`;
   });
 
+  const RANGOS_GC1 = [
+    {label:'$4,500 – $5,000', monto:10, min:4500, max:5000},
+    {label:'$5,001 – $5,500', monto:20, min:5001, max:5500},
+    {label:'$5,501 – $6,000', monto:40, min:5501, max:6000},
+    {label:'$6,001 – $6,500', monto:60, min:6001, max:6500},
+    {label:'$6,501 – $7,500', monto:80, min:6501, max:7500},
+    {label:'$7,501 en adelante', monto:100, min:7501, max:Infinity},
+  ];
+  let tablaHtml = '<table class="tabla-rangos"><thead><tr><th>Rango de venta consolidada</th><th>Gift Card 1</th></tr></thead><tbody>';
+  RANGOS_GC1.forEach(rg => {
+    const esActual = emp.venta_consolidada >= rg.min && emp.venta_consolidada <= rg.max;
+    tablaHtml += `<tr class="${esActual ? 'fila-actual' : ''}"><td>${rg.label}${esActual ? ' ← estás aquí' : ''}</td><td>${money(rg.monto)}</td></tr>`;
+  });
+  tablaHtml += '</tbody></table>';
+  if(emp.venta_consolidada < 4500){
+    tablaHtml += `<div class="nota" style="margin-top:8px;">Aún no alcanzas el primer rango — te faltan ${money(4500 - emp.venta_consolidada)} en venta consolidada.</div>`;
+  }
+
   const sigTxt = pr.siguiente_tier
     ? `Con tu ritmo actual (${money(pr.ritmo_diario)}/día proyectado), si continúas así llegarías a ${money(pr.venta_proyectada)} en ventas consolidadas. Te faltarían ${money(pr.siguiente_tier.venta_faltante)} en venta para subir a la Gift Card de ${money(pr.siguiente_tier.monto)}.`
     : `Con tu ritmo actual, proyectas ${money(pr.venta_proyectada)} en ventas consolidadas — ¡ya alcanzarías el nivel máximo de Gift Card 1!`;
@@ -280,18 +315,20 @@ function render(mesKey, id, emp, meta){
 
     <div class="card">
       <div class="section-title">Distribución de tu venta por sucursal</div>
+      ${emp.sucursales.length > 1 ? `<div class="total-box"><span class="lbl">Venta consolidada (todas tus sucursales)</span><span class="num">${money(emp.venta_consolidada)}</span></div>` : ''}
       ${sucHtml || '<div class="sin-datos">Sin marcaciones registradas este mes.</div>'}
     </div>
 
     <div class="card">
-      <div class="section-title">Proyección de premio</div>
+      <div class="section-title">Lo que llevas ganado a la fecha</div>
       <div class="stat-row">
-        <div class="stat"><div class="num">${money(emp.gc1)}</div><div class="lbl">Gift Card 1 hoy</div></div>
+        <div class="stat stat-destacado"><div class="num">${money(emp.gc1 + emp.bono_jefe)}</div><div class="lbl">Gift Card 1 hoy</div></div>
         <div class="stat"><div class="num">${money(pr.tier_proyectado)}</div><div class="lbl">proyectado a fin de mes</div></div>
       </div>
       <div class="tier-track">${trackHtml}</div>
       <div class="tier-labels"><span>$10</span><span>$20</span><span>$40</span><span>$60</span><span>$80</span><span>$100</span></div>
-      <div class="nota">${sigTxt}</div>
+      ${tablaHtml}
+      <div class="nota" style="margin-top:10px;">${sigTxt}</div>
       ${jefeHtml}
       <div class="nota" style="margin-top:8px;">${gc2Txt}</div>
     </div>
