@@ -293,12 +293,14 @@ function render(mesKey, id, emp, meta){
 
   let gc2Txt;
   if(pr.aplica_gc2){
-    gc2Txt = 'Ya cumples los requisitos base para aplicar a Gift Card 2 (según venta y días calificados). El monto final depende del presupuesto de tu sucursal.';
+    gc2Txt = 'Ya cumples los KPI establecidos para ganar Gift Card 2 (venta y días calificados). El monto final depende del presupuesto de tu sucursal, pero vas muy bien encaminado.';
   } else {
     const partes = [];
     if(pr.gc2_venta_falta > 0) partes.push(`${money(pr.gc2_venta_falta)} más en venta`);
     if(pr.gc2_dias_faltan > 0) partes.push(`${pr.gc2_dias_faltan} día(s) calificado(s) más`);
-    gc2Txt = partes.length ? `Para aplicar a Gift Card 2 te faltan: ${partes.join(' y ')}.` : 'Estás cerca de cumplir los requisitos de Gift Card 2.';
+    gc2Txt = partes.length
+      ? `Podrías ganar Gift Card 2 si cumples todos los KPI establecidos — te falta: ${partes.join(' y ')}.`
+      : 'Estás muy cerca de cumplir todos los KPI para ganar Gift Card 2.';
   }
 
   cont.innerHTML = `
