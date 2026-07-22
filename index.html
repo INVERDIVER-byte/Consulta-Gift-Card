@@ -540,13 +540,14 @@ function renderSupervisor(sup, meta){
         <div class="dias-detalle" id="${detalleId}">
           <div class="bono-mini-grid">
             <div class="bono-mini-card"><div class="bono-mini-num">${money(s.ingresos)}</div><div class="bono-mini-lbl">Ingresos</div></div>
-            <div class="bono-mini-card"><div class="bono-mini-num">${s.calidad_pct}%</div><div class="bono-mini-lbl">Calidad (cumplimiento)</div></div>
             <div class="bono-mini-card"><div class="bono-mini-num">${money(s.calidad_monto)}</div><div class="bono-mini-lbl">Bono Calidad</div></div>
             <div class="bono-mini-card">
-              <div class="bono-mini-num"><span class="badge ${inventarioOk ? 'verde' : 'rojo'}">${s.inventario_criterio}</span></div>
-              <div class="bono-mini-lbl">Inventario</div>
+              <div class="bono-mini-num">${money(s.inventarios)}</div>
+              <div class="bono-mini-lbl">Inventario <span class="badge ${inventarioOk ? 'verde' : 'rojo'}" style="padding:1px 7px;font-size:10px;">${s.inventario_criterio}</span></div>
             </div>
+            <div class="bono-mini-card"><div class="bono-mini-num">${s.calidad_pct}%</div><div class="bono-mini-lbl">Calidad (cumplimiento)</div></div>
           </div>
+          <div class="nota" style="margin-top:8px;font-size:11px;">Ingresos + Bono Calidad + Inventario = ${money(s.total)}</div>
         </div>
       </div>`;
   });
