@@ -124,6 +124,11 @@
   .suc-sup-row:first-child{border-top:none;}
   .equipo-suc-header{font-size:12.5px;font-weight:700;color:var(--azul-1);background:var(--fondo);padding:8px 10px;border-radius:8px;margin:14px 0 4px;}
   .equipo-suc-header:first-child{margin-top:0;}
+
+  .bono-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .bono-mini-card{background:var(--fondo);border-radius:8px;padding:9px 8px;text-align:center;}
+  .bono-mini-num{font-size:15px;font-weight:800;color:var(--azul-1);}
+  .bono-mini-lbl{font-size:10.5px;color:var(--texto-suave);margin-top:2px;}
 </style>
 </head>
 <body>
@@ -517,11 +522,32 @@ function renderSupervisor(sup, meta){
   document.getElementById('s-meta').textContent = 'Supervisor · ' + (meta.mes || '');
 
   let sucRows = '';
-  sup.sucursales.forEach(s => {
+  sup.sucursales.forEach((s, idx) => {
+    const detalleId = 'sup-suc-' + idx;
+    const inventarioOk = (s.inventario_criterio || '').toLowerCase() === 'aplica';
     sucRows += `
-      <div class="suc-sup-row">
-        <span>${s.sucursal}<br><span style="color:var(--texto-suave);font-size:11px;">${money(s.venta)} / meta ${money(s.meta)} (${s.pct_venta}%)</span></span>
-        <span style="text-align:right;font-weight:700;">${money(s.total)}</span>
+      <div class="suc-item">
+        <div class="suc-top" onclick="toggleDetalle('${detalleId}')">
+          <div>
+            <div class="suc-nombre">${s.sucursal}</div>
+            <div class="suc-sub">${money(s.venta)} / meta ${money(s.meta)} (${s.pct_venta}%)</div>
+          </div>
+          <div>
+            <div class="suc-venta">${money(s.total)}</div>
+            <div class="suc-toggle" id="toggle-${detalleId}">ver detalle ▾</div>
+          </div>
+        </div>
+        <div class="dias-detalle" id="${detalleId}">
+          <div class="bono-mini-grid">
+            <div class="bono-mini-card"><div class="bono-mini-num">${money(s.ingresos)}</div><div class="bono-mini-lbl">Ingresos</div></div>
+            <div class="bono-mini-card"><div class="bono-mini-num">${s.calidad_pct}%</div><div class="bono-mini-lbl">Calidad (cumplimiento)</div></div>
+            <div class="bono-mini-card"><div class="bono-mini-num">${money(s.calidad_monto)}</div><div class="bono-mini-lbl">Bono Calidad</div></div>
+            <div class="bono-mini-card">
+              <div class="bono-mini-num"><span class="badge ${inventarioOk ? 'verde' : 'rojo'}">${s.inventario_criterio}</span></div>
+              <div class="bono-mini-lbl">Inventario</div>
+            </div>
+          </div>
+        </div>
       </div>`;
   });
 
