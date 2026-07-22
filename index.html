@@ -6,18 +6,33 @@
 <title>Mi Gift Card</title>
 <style>
   :root{
-    --azul-1:#1F3864; --azul-2:#2E4057; --azul-3:#1A3A5C;
+    --azul-1:#DC1E2D; --azul-2:#A31820; --azul-3:#8C1319; --amarillo:#FFE607;
     --fondo:#F3F5F8; --tarjeta:#FFFFFF; --texto:#1C2530; --texto-suave:#5B6572; --linea:#E3E7ED;
     --verde:#1E7A4C; --verde-fondo:#E7F5EC; --ambar:#966B0A; --ambar-fondo:#FBF0DA; --rojo:#A3312B; --rojo-fondo:#FBEAE9;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--fondo);color:var(--texto);-webkit-font-smoothing:antialiased;}
-  .topbar{background:var(--azul-1);color:#fff;padding:18px 20px;text-align:center;}
-  .topbar h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.2px;}
-  .topbar p{margin:4px 0 0;font-size:12.5px;color:#C7D3E3;}
-  .wrap{max-width:480px;margin:0 auto;padding:20px 16px 60px;}
-  .card{background:var(--tarjeta);border-radius:14px;border:1px solid var(--linea);padding:20px;margin-bottom:16px;}
-  #login-view .card{margin-top:24px;text-align:center;}
+  body{
+    margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--fondo);color:var(--texto);-webkit-font-smoothing:antialiased;
+    position:relative;min-height:100vh;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:url('logo.png');background-repeat:no-repeat;background-position:center 30vh;background-size:min(70vw,520px);
+    opacity:0.05;
+  }
+  .topbar{
+    background:var(--azul-1);color:#fff;padding:16px 20px;
+    display:flex;align-items:center;justify-content:center;gap:14px;position:relative;z-index:1;
+  }
+  .topbar img{width:44px;height:44px;object-fit:contain;flex-shrink:0;}
+  .topbar-text{text-align:left;}
+  .topbar h1{margin:0;font-size:18px;font-weight:800;letter-spacing:.2px;color:var(--amarillo);}
+  .topbar p{margin:3px 0 0;font-size:11.5px;color:#FBD3D6;}
+  .wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px;position:relative;z-index:1;}
+  .card{background:rgba(255,255,255,0.94);border-radius:14px;border:1px solid var(--linea);padding:20px;margin-bottom:16px;}
+  .grid-2{display:grid;grid-template-columns:1fr;gap:16px;}
+  @media (min-width:680px){ .grid-2{grid-template-columns:1fr 1fr;} .grid-2 > .card{margin-bottom:0;} .card.full{grid-column:1 / -1;} }
+  #login-view .card{margin-top:24px;text-align:center;max-width:420px;margin-left:auto;margin-right:auto;}
   #login-view h2{font-size:16px;margin:0 0 6px;}
   #login-view p{font-size:13px;color:var(--texto-suave);margin:0 0 14px;}
   select.mes-select{
@@ -112,8 +127,11 @@
 <body>
 
 <div class="topbar">
-  <h1>Mi Gift Card</h1>
-  <p id="mes-label">cargando…</p>
+  <img src="logo.png" alt="Pollo Pinulito">
+  <div class="topbar-text">
+    <h1>Mi Gift Card</h1>
+    <p id="mes-label">Inversiones Diversas de Guatemala, S.A. de C.V. · Pollo Pinulito</p>
+  </div>
 </div>
 
 <div class="wrap">
@@ -182,6 +200,7 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 let MESES = [];
 let DATA_CACHE = {};
@@ -203,7 +222,6 @@ async function cargarManifest(){
     selLogin.innerHTML += `<option value="${m.key}">${m.label}</option>`;
     selDash.innerHTML += `<option value="${m.key}">${m.label}</option>`;
   });
-  document.getElementById('mes-label').textContent = MESES.length ? MESES[0].label : '';
 }
 
 async function cargarDatosMes(key){
@@ -365,21 +383,31 @@ function render(mesKey, id, emp, meta){
   }
 
   cont.innerHTML = `
-    <div class="card">
-      <div class="section-title">Cumplimiento a la fecha</div>
-      <div class="stat-row">
-        <div class="stat"><div class="num">${emp.dias_trabajados}</div><div class="lbl">días trabajados</div></div>
-        <div class="stat"><div class="num">${emp.dias_califican}</div><div class="lbl">días califican</div></div>
-        <div class="stat"><div class="num">${pct}%</div><div class="lbl">cumplimiento</div></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Cumplimiento a la fecha</div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="position:relative;width:110px;height:110px;flex-shrink:0;">
+            <canvas id="donutCumplimiento" role="img" aria-label="Cumplimiento ${pct} por ciento"></canvas>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+              <div style="font-size:20px;font-weight:800;">${pct}%</div>
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div class="stat-row" style="margin-bottom:8px;">
+              <div class="stat"><div class="num">${emp.dias_trabajados}</div><div class="lbl">trabajados</div></div>
+              <div class="stat"><div class="num">${emp.dias_califican}</div><div class="lbl">califican</div></div>
+            </div>
+            ${badge}
+          </div>
+        </div>
       </div>
-      <div class="barra-outer"><div class="barra-inner" style="width:${pct}%;background:${colorPct};"></div></div>
-      <div style="margin-top:8px;">${badge}</div>
-    </div>
 
-    <div class="card">
-      <div class="section-title">Distribución de tu venta por sucursal</div>
-      ${emp.sucursales.length > 1 ? `<div class="total-box"><span class="lbl">Venta consolidada (todas tus sucursales)</span><span class="num">${money(emp.venta_consolidada)}</span></div>` : ''}
-      ${sucHtml || '<div class="sin-datos">Sin marcaciones registradas este mes.</div>'}
+      <div class="card">
+        <div class="section-title">Distribución de tu venta por sucursal</div>
+        ${emp.sucursales.length > 1 ? `<div class="total-box"><span class="lbl">Venta consolidada (todas tus sucursales)</span><span class="num">${money(emp.venta_consolidada)}</span></div>` : ''}
+        ${sucHtml || '<div class="sin-datos">Sin marcaciones registradas este mes.</div>'}
+      </div>
     </div>
 
     <div class="card">
@@ -396,7 +424,22 @@ function render(mesKey, id, emp, meta){
       <div class="nota" style="margin-top:8px;">${gc2Txt}</div>
     </div>
   `;
+
+  dibujarDonut('donutCumplimiento', emp.dias_califican, Math.max(0, emp.dias_trabajados - emp.dias_califican));
 }
+
+let CHART_INSTANCES = {};
+function dibujarDonut(canvasId, ok, falla){
+  const el = document.getElementById(canvasId);
+  if(!el || typeof Chart === 'undefined') return;
+  if(CHART_INSTANCES[canvasId]) CHART_INSTANCES[canvasId].destroy();
+  CHART_INSTANCES[canvasId] = new Chart(el, {
+    type: 'doughnut',
+    data: { labels: ['Califica','No califica'], datasets: [{ data: [ok, falla], backgroundColor: ['#1E7A4C','#F3F5F8'], borderWidth: 0 }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'72%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+  });
+}
+
 
 function toggleDetalle(id){
   const el = document.getElementById(id);
@@ -502,16 +545,19 @@ function renderSupervisor(sup, meta){
   });
 
   document.getElementById('contenido-sup').innerHTML = `
-    <div class="card">
-      <div class="section-title">Tu bono — ${meta.mes}</div>
-      <div class="total-box"><span class="lbl">Total</span><span class="num">${money(sup.bono_total)}</span></div>
-      <div class="stat-row">
-        <div class="stat"><div class="num">${money(sup.bono_ingresos)}</div><div class="lbl">Bono Ingresos</div></div>
-        <div class="stat"><div class="num">${money(sup.bono_calidad)}</div><div class="lbl">Bono Calidad</div></div>
-        <div class="stat"><div class="num">${money(sup.bono_inventarios)}</div><div class="lbl">Bono Inventario</div></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Tu bono — ${meta.mes}</div>
+        <div class="total-box"><span class="lbl">Total</span><span class="num">${money(sup.bono_total)}</span></div>
+        <div style="position:relative;height:130px;margin-top:10px;">
+          <canvas id="barBono" role="img" aria-label="Bono ingresos ${sup.bono_ingresos}, calidad ${sup.bono_calidad}, inventario ${sup.bono_inventarios}"></canvas>
+        </div>
       </div>
-      <div class="section-title" style="margin-top:6px;">Por sucursal</div>
-      ${sucRows}
+
+      <div class="card">
+        <div class="section-title">Por sucursal</div>
+        ${sucRows}
+      </div>
     </div>
 
     <div class="card">
@@ -519,6 +565,26 @@ function renderSupervisor(sup, meta){
       ${equipoHtml || '<div class="sin-datos">Sin colaboradores encontrados para este período.</div>'}
     </div>
   `;
+
+  dibujarBarraBono(sup.bono_ingresos, sup.bono_calidad, sup.bono_inventarios);
+}
+
+function dibujarBarraBono(ingresos, calidad, inventarios){
+  const el = document.getElementById('barBono');
+  if(!el || typeof Chart === 'undefined') return;
+  if(CHART_INSTANCES['barBono']) CHART_INSTANCES['barBono'].destroy();
+  CHART_INSTANCES['barBono'] = new Chart(el, {
+    type: 'bar',
+    data: {
+      labels: ['Ingresos','Calidad','Inventario'],
+      datasets: [{ data: [ingresos, calidad, inventarios], backgroundColor: ['#DC1E2D','#A31820','#8C1319'], borderRadius: 4 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{display:false}, tooltip:{enabled:false} },
+      scales:{ x:{display:false}, y:{ grid:{display:false}, ticks:{ color:'#5B6572', font:{size:12} } } }
+    }
+  });
 }
 
 cargarManifest();
