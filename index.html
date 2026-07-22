@@ -567,11 +567,19 @@ function renderSupervisor(sup, meta){
       const pct = e.dias_trabajados > 0 ? Math.round(100 * e.dias_califican / e.dias_trabajados) : 0;
       const badgeColor = pct >= 90 ? 'verde' : (pct >= 70 ? 'ambar' : 'rojo');
       const detalleId = 'sup-emp-' + idxGlobal++;
+      const prEmp = e.proyeccion || {};
+      let resumenGanado = `
+        <div class="bono-mini-grid" style="margin-bottom:12px;">
+          <div class="bono-mini-card"><div class="bono-mini-num">${money(e.gc1)}</div><div class="bono-mini-lbl">Gift Card 1</div></div>
+          <div class="bono-mini-card"><div class="bono-mini-num">${money(e.bono_jefe)}</div><div class="bono-mini-lbl">Bono Jefe</div></div>
+          <div class="bono-mini-card"><div class="bono-mini-num">${money(e.venta_consolidada)}</div><div class="bono-mini-lbl">Venta consolidada</div></div>
+          <div class="bono-mini-card"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
+        </div>`;
       equipoHtml += `
         <div class="equipo-item">
           <div class="equipo-top" onclick="toggleDetalle('${detalleId}')">
             <div>
-              <div class="equipo-nombre">${e.nombre} <span style="font-weight:400;color:var(--texto-suave);font-size:12px;">· ID ${e.id}</span></div>
+              <div class="equipo-nombre">${e.nombre} <span class="badge" style="background:var(--fondo);color:var(--texto-suave);padding:2px 8px;">ID ${e.id}</span></div>
               <div class="equipo-sub">${e.cargo} · <span class="badge ${badgeColor}" style="padding:2px 8px;">${pct}%</span></div>
             </div>
             <div>
@@ -579,7 +587,7 @@ function renderSupervisor(sup, meta){
               <div class="suc-toggle" id="toggle-${detalleId}">ver detalle ▾</div>
             </div>
           </div>
-          <div class="dias-detalle" id="${detalleId}">${sucursalesHtml(e.sucursales, detalleId)}</div>
+          <div class="dias-detalle" id="${detalleId}">${resumenGanado}${sucursalesHtml(e.sucursales, detalleId)}</div>
         </div>`;
     });
   });
