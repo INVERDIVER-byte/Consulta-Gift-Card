@@ -571,7 +571,7 @@ function renderSupervisor(sup, meta){
         <div class="equipo-item">
           <div class="equipo-top" onclick="toggleDetalle('${detalleId}')">
             <div>
-              <div class="equipo-nombre">${e.nombre}</div>
+              <div class="equipo-nombre">${e.nombre} <span style="font-weight:400;color:var(--texto-suave);font-size:12px;">· ID ${e.id}</span></div>
               <div class="equipo-sub">${e.cargo} · <span class="badge ${badgeColor}" style="padding:2px 8px;">${pct}%</span></div>
             </div>
             <div>
