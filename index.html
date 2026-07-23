@@ -459,7 +459,42 @@ function toggleDetalle(id){
   const el = document.getElementById(id);
   const toggle = document.getElementById('toggle-' + id);
   el.classList.toggle('abierto');
-  toggle.textContent = el.classList.contains('abierto') ? 'ocultar detalle ▴' : 'ver detalle ▾';
+  if(toggle) toggle.textContent = el.classList.contains('abierto') ? 'ocultar detalle ▴' : 'ver detalle ▾';
+  if(el.classList.contains('abierto')){
+    el.querySelectorAll('canvas.mini-donut').forEach(cv => {
+      if(cv.dataset.drawn) return;
+      cv.dataset.drawn = '1';
+      const ok = parseInt(cv.dataset.ok, 10) || 0;
+      const falla = parseInt(cv.dataset.falla, 10) || 0;
+      new Chart(cv, {
+        type: 'doughnut',
+        data: { datasets: [{ data: [ok, falla], backgroundColor: ['#1E7A4C','#F3F5F8'], borderWidth: 0 }] },
+        options: { responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+      });
+    });
+  }
+}
+
+function cumplimientoMiniHtml(e, idPrefix){
+  const pct = e.dias_trabajados > 0 ? Math.round(100 * e.dias_califican / e.dias_trabajados) : 0;
+  const colorBadge = pct >= 90 ? 'verde' : (pct >= 70 ? 'ambar' : 'rojo');
+  const texto = pct >= 90 ? 'Vas muy bien' : (pct >= 70 ? 'Puede mejorar' : 'En riesgo');
+  const canvasId = idPrefix + '-donut';
+  const sumaSuc = (e.sucursales || []).reduce((a,s) => a + s.dias_trabajados, 0);
+  const diasComp = sumaSuc - e.dias_trabajados;
+  const nota = diasComp > 0 ? `<div class="nota" style="margin-bottom:12px;font-size:11px;">${diasComp} día(s) marcó en más de una sucursal.</div>` : '';
+  return `
+    <div style="display:flex;align-items:center;gap:14px;background:var(--fondo);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+      <div style="position:relative;width:60px;height:60px;flex-shrink:0;">
+        <canvas id="${canvasId}" class="mini-donut" data-ok="${e.dias_califican}" data-falla="${Math.max(0, e.dias_trabajados - e.dias_califican)}"></canvas>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;">${pct}%</div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:11.5px;color:var(--texto-suave);">${e.dias_trabajados} trabajados · ${e.dias_califican} califican</div>
+        <span class="badge ${colorBadge}" style="padding:2px 8px;font-size:11px;">${texto}</span>
+      </div>
+    </div>
+    ${nota}`;
 }
 
 function cambiarTab(tab){
@@ -523,6 +558,93 @@ function salirSupervisor(){
 document.getElementById('sup-input').addEventListener('keydown', function(e){
   if(e.key === 'Enter') buscarSupervisor();
 });
+
+function renderSupervisorAnidado(s, prefix){
+  const tieneBonoS = s.bono_total !== null && s.bono_total !== undefined;
+  const detalleId = prefix + '-det';
+
+  let resumenBono = '';
+  if(tieneBonoS){
+    resumenBono = `
+      <div class="bono-mini-grid" style="margin-bottom:12px;">
+        <div class="bono-mini-card"><div class="bono-mini-num">${money(s.bono_ingresos)}</div><div class="bono-mini-lbl">Ingresos</div></div>
+        <div class="bono-mini-card"><div class="bono-mini-num">${money(s.bono_calidad)}</div><div class="bono-mini-lbl">Bono Calidad</div></div>
+        <div class="bono-mini-card"><div class="bono-mini-num">${money(s.bono_inventarios)}</div><div class="bono-mini-lbl">Inventario</div></div>
+        <div class="bono-mini-card"><div class="bono-mini-num">${money(s.bono_total)}</div><div class="bono-mini-lbl">Total</div></div>
+      </div>`;
+  } else {
+    resumenBono = `<div class="nota" style="margin-bottom:12px;">Sin bono cargado para este período.</div>`;
+  }
+
+  // agrupar el equipo de este supervisor por sucursal, y cruzar con el bono por sucursal si existe
+  const bonoPorSuc = {};
+  (s.sucursales || []).forEach(b => { bonoPorSuc[b.sucursal] = b; });
+
+  const porSucursal = {};
+  (s.equipo || []).forEach(e => {
+    const suc = e.sucursal_principal || 'Sin sucursal';
+    (porSucursal[suc] = porSucursal[suc] || []).push(e);
+  });
+
+  let sucursalesHtmlChain = '';
+  Object.keys(porSucursal).sort().forEach((sucNombre, sIdx) => {
+    const miembros = porSucursal[sucNombre];
+    const b = bonoPorSuc[sucNombre];
+    const sucDetId = prefix + '-suc' + sIdx;
+    const bonoInfo = b ? `<span style="color:var(--texto-suave);font-size:11px;"> · ${money(b.venta)} / meta ${money(b.meta)} (${b.pct_venta}%) · bono ${money(b.total)}</span>` : '';
+
+    let empRows = '';
+    miembros.forEach((e, eIdx) => {
+      const pct = e.dias_trabajados > 0 ? Math.round(100 * e.dias_califican / e.dias_trabajados) : 0;
+      const badgeColor = pct >= 90 ? 'verde' : (pct >= 70 ? 'ambar' : 'rojo');
+      const empDetId = sucDetId + '-emp' + eIdx;
+      empRows += `
+        <div class="equipo-item">
+          <div class="equipo-top" onclick="toggleDetalle('${empDetId}')">
+            <div>
+              <div class="equipo-nombre"><span class="badge" style="background:var(--fondo);color:var(--texto-suave);padding:2px 8px;">ID ${e.id}</span> ${e.nombre}</div>
+              <div class="equipo-sub">${e.cargo} · <span class="badge ${badgeColor}" style="padding:2px 8px;">${pct}%</span></div>
+            </div>
+            <div>
+              <div class="equipo-monto">${money(e.total)}</div>
+              <div class="suc-toggle" id="toggle-${empDetId}">ver detalle ▾</div>
+            </div>
+          </div>
+          <div class="dias-detalle" id="${empDetId}">${cumplimientoMiniHtml(e, empDetId)}${sucursalesHtml(e.sucursales, empDetId)}</div>
+        </div>`;
+    });
+
+    sucursalesHtmlChain += `
+      <div class="suc-item">
+        <div class="suc-top" onclick="toggleDetalle('${sucDetId}')">
+          <div>
+            <div class="suc-nombre">${sucNombre}</div>
+            <div class="suc-sub">${miembros.length} colaborador(es)${bonoInfo}</div>
+          </div>
+          <div class="suc-toggle" id="toggle-${sucDetId}">ver personal ▾</div>
+        </div>
+        <div class="dias-detalle" id="${sucDetId}">${empRows}</div>
+      </div>`;
+  });
+
+  return `
+    <div class="equipo-item">
+      <div class="equipo-top" onclick="toggleDetalle('${detalleId}')">
+        <div>
+          <div class="equipo-nombre">${s.nombre}</div>
+          <div class="equipo-sub">${(s.equipo || []).length} colaboradores en ${Object.keys(porSucursal).length} sucursal(es)</div>
+        </div>
+        <div>
+          <div class="equipo-monto">${tieneBonoS ? money(s.bono_total) : '—'}</div>
+          <div class="suc-toggle" id="toggle-${detalleId}">ver desglose ▾</div>
+        </div>
+      </div>
+      <div class="dias-detalle" id="${detalleId}">
+        ${resumenBono}
+        ${sucursalesHtmlChain || '<div class="sin-datos">Sin colaboradores este período.</div>'}
+      </div>
+    </div>`;
+}
 
 function renderSupervisor(sup, meta){
   document.getElementById('s-nombre').textContent = sup.nombre_completo || sup.nombre;
@@ -594,7 +716,7 @@ function renderSupervisor(sup, meta){
               <div class="suc-toggle" id="toggle-${detalleId}">ver detalle ▾</div>
             </div>
           </div>
-          <div class="dias-detalle" id="${detalleId}">${resumenGanado}${sucursalesHtml(e.sucursales, detalleId)}</div>
+          <div class="dias-detalle" id="${detalleId}">${cumplimientoMiniHtml(e, detalleId)}${resumenGanado}${sucursalesHtml(e.sucursales, detalleId)}</div>
         </div>`;
     });
   });
@@ -639,17 +761,12 @@ function renderSupervisor(sup, meta){
   let subordinadosHtml = '';
   if(sup.supervisores_subordinados && sup.supervisores_subordinados.length){
     sup.supervisores_subordinados.forEach((s, idx) => {
-      const tieneBonoS = s.bono_total !== null && s.bono_total !== undefined;
-      subordinadosHtml += `
-        <div class="suc-sup-row">
-          <span>${s.nombre}<br><span style="color:var(--texto-suave);font-size:11px;">${s.equipo_count} colaboradores</span></span>
-          <span style="text-align:right;font-weight:700;">${tieneBonoS ? money(s.bono_total) : '<span style="font-size:11px;color:var(--texto-suave);">sin bono este período</span>'}</span>
-        </div>`;
+      subordinadosHtml += renderSupervisorAnidado(s, 'aqsup' + idx);
     });
   }
   const subordinadosBloque = subordinadosHtml ? `
     <div class="card">
-      <div class="section-title">Bonos de tus supervisores</div>
+      <div class="section-title">Tus supervisores — desglose completo</div>
       ${subordinadosHtml}
     </div>` : '';
 
