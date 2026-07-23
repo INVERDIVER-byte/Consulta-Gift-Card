@@ -112,6 +112,14 @@
   .tab-btn.tab-activo{background:var(--azul-1);color:#fff;}
 
   .equipo-item{border-top:1px solid var(--linea);padding:12px 0;}
+  .equipo-item.nivel-supervisor{
+    background:#FBEAE9;border:1.5px solid var(--azul-1);border-radius:10px;
+    padding:12px 14px;margin-bottom:10px;border-top:1.5px solid var(--azul-1);
+  }
+  .equipo-item.nivel-supervisor .equipo-nombre{color:var(--azul-1);font-size:14.5px;}
+  .corona{margin-right:4px;}
+  .search-box{width:100%;font-size:13.5px;padding:9px 12px;border-radius:10px;border:1.5px solid var(--linea);margin-bottom:12px;}
+  .search-box:focus{outline:none;border-color:var(--azul-2);}
   .equipo-item:first-child{border-top:none;padding-top:0;}
   .equipo-top{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
   .equipo-nombre{font-size:13.5px;font-weight:700;}
@@ -455,6 +463,44 @@ function dibujarDonut(canvasId, ok, falla){
 }
 
 
+function filtrarLista(inputId, listId){
+  const term = document.getElementById(inputId).value.trim().toLowerCase();
+  const cont = document.getElementById(listId);
+  if(!cont) return;
+  const items = cont.querySelectorAll('.equipo-item[data-nombre]');
+
+  if(!term){
+    items.forEach(it => it.style.display = '');
+    cont.querySelectorAll('.equipo-suc-header').forEach(h => h.style.display = '');
+    cont.querySelectorAll('.suc-item').forEach(s => s.style.display = '');
+    return;
+  }
+
+  items.forEach(it => {
+    const nombre = it.dataset.nombre || '';
+    const matchSelf = nombre.includes(term);
+    const descMatch = Array.from(it.querySelectorAll('[data-nombre]')).some(d => (d.dataset.nombre || '').includes(term));
+    it.style.display = (matchSelf || descMatch) ? '' : 'none';
+  });
+
+  cont.querySelectorAll('.equipo-suc-header').forEach(h => {
+    let sib = h.nextElementSibling;
+    let anyVisible = false;
+    while(sib && sib.classList.contains('equipo-item')){
+      if(sib.style.display !== 'none') anyVisible = true;
+      sib = sib.nextElementSibling;
+    }
+    h.style.display = anyVisible ? '' : 'none';
+  });
+
+  cont.querySelectorAll('.suc-item').forEach(s => {
+    const empItems = s.querySelectorAll('.equipo-item[data-nombre]');
+    if(empItems.length === 0) return;
+    const anyVisible = Array.from(empItems).some(e => e.style.display !== 'none');
+    s.style.display = anyVisible ? '' : 'none';
+  });
+}
+
 function toggleDetalle(id){
   const el = document.getElementById(id);
   const toggle = document.getElementById('toggle-' + id);
@@ -473,6 +519,13 @@ function toggleDetalle(id){
       });
     });
   }
+}
+
+const TOPE_PREMIO = 160;
+function coronaHtml(e){
+  const maximoGC1 = e.gc1 >= 100;
+  const aplicaGC2 = e.proyeccion && e.proyeccion.aplica_gc2;
+  return (maximoGC1 && aplicaGC2) ? '<span class="corona" title="Alcanzó el tope del premio">👑</span>' : '';
 }
 
 function cumplimientoMiniHtml(e, idPrefix){
@@ -599,10 +652,10 @@ function renderSupervisorAnidado(s, prefix){
       const badgeColor = pct >= 90 ? 'verde' : (pct >= 70 ? 'ambar' : 'rojo');
       const empDetId = sucDetId + '-emp' + eIdx;
       empRows += `
-        <div class="equipo-item">
+        <div class="equipo-item" data-nombre="${e.nombre.toLowerCase()}">
           <div class="equipo-top" onclick="toggleDetalle('${empDetId}')">
             <div>
-              <div class="equipo-nombre"><span class="badge" style="background:var(--fondo);color:var(--texto-suave);padding:2px 8px;">ID ${e.id}</span> ${e.nombre}</div>
+              <div class="equipo-nombre">${coronaHtml(e)}<span class="badge" style="background:var(--fondo);color:var(--texto-suave);padding:2px 8px;">ID ${e.id}</span> ${e.nombre}</div>
               <div class="equipo-sub">${e.cargo} · <span class="badge ${badgeColor}" style="padding:2px 8px;">${pct}%</span></div>
             </div>
             <div>
@@ -633,7 +686,7 @@ function renderSupervisorAnidado(s, prefix){
   });
 
   return `
-    <div class="equipo-item">
+    <div class="equipo-item nivel-supervisor" data-nombre="${s.nombre.toLowerCase()}">
       <div class="equipo-top" onclick="toggleDetalle('${detalleId}')">
         <div>
           <div class="equipo-nombre">${s.nombre}</div>
@@ -710,10 +763,10 @@ function renderSupervisor(sup, meta){
           <div class="bono-mini-card"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
         </div>`;
       equipoHtml += `
-        <div class="equipo-item">
+        <div class="equipo-item" data-nombre="${e.nombre.toLowerCase()}">
           <div class="equipo-top" onclick="toggleDetalle('${detalleId}')">
             <div>
-              <div class="equipo-nombre"><span class="badge" style="background:var(--fondo);color:var(--texto-suave);padding:2px 8px;">ID ${e.id}</span> ${e.nombre}</div>
+              <div class="equipo-nombre">${coronaHtml(e)}<span class="badge" style="background:var(--fondo);color:var(--texto-suave);padding:2px 8px;">ID ${e.id}</span> ${e.nombre}</div>
               <div class="equipo-sub">${e.cargo} · <span class="badge ${badgeColor}" style="padding:2px 8px;">${pct}%</span></div>
             </div>
             <div>
@@ -772,13 +825,15 @@ function renderSupervisor(sup, meta){
   const subordinadosBloque = subordinadosHtml ? `
     <div class="card">
       <div class="section-title">Tus supervisores — desglose completo</div>
-      ${subordinadosHtml}
+      <input type="text" class="search-box" id="buscar-subordinados" placeholder="Buscar por nombre (supervisor o colaborador)…" oninput="filtrarLista('buscar-subordinados', 'lista-subordinados')">
+      <div id="lista-subordinados">${subordinadosHtml}</div>
     </div>` : '';
 
   const equipoPlanoBloque = subordinadosHtml ? '' : `
     <div class="card">
       <div class="section-title">Tu equipo (${sup.equipo.length}) — ${meta.mes_empleados || ''}</div>
-      ${equipoHtml || '<div class="sin-datos">Sin colaboradores encontrados para este período.</div>'}
+      <input type="text" class="search-box" id="buscar-equipo" placeholder="Buscar colaborador por nombre…" oninput="filtrarLista('buscar-equipo', 'lista-equipo')">
+      <div id="lista-equipo">${equipoHtml || '<div class="sin-datos">Sin colaboradores encontrados para este período.</div>'}</div>
     </div>`;
 
   document.getElementById('contenido-sup').innerHTML = `
