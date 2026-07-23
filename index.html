@@ -636,8 +636,26 @@ function renderSupervisor(sup, meta){
       </table>
     </div>`;
 
+  let subordinadosHtml = '';
+  if(sup.supervisores_subordinados && sup.supervisores_subordinados.length){
+    sup.supervisores_subordinados.forEach((s, idx) => {
+      const tieneBonoS = s.bono_total !== null && s.bono_total !== undefined;
+      subordinadosHtml += `
+        <div class="suc-sup-row">
+          <span>${s.nombre}<br><span style="color:var(--texto-suave);font-size:11px;">${s.equipo_count} colaboradores</span></span>
+          <span style="text-align:right;font-weight:700;">${tieneBonoS ? money(s.bono_total) : '<span style="font-size:11px;color:var(--texto-suave);">sin bono este período</span>'}</span>
+        </div>`;
+    });
+  }
+  const subordinadosBloque = subordinadosHtml ? `
+    <div class="card">
+      <div class="section-title">Bonos de tus supervisores</div>
+      ${subordinadosHtml}
+    </div>` : '';
+
   document.getElementById('contenido-sup').innerHTML = `
     ${bonoBloque}
+    ${subordinadosBloque}
     ${tablaRangosSup}
     <div class="card">
       <div class="section-title">Tu equipo (${sup.equipo.length}) — ${meta.mes_empleados || ''}</div>
