@@ -335,6 +335,12 @@ function render(mesKey, id, emp, meta){
     ? '<span class="badge verde">Vas muy bien</span>'
     : (pct >= 70 ? '<span class="badge ambar">Puedes mejorar</span>' : '<span class="badge rojo">En riesgo, revisa tus días fallados</span>');
 
+  const sumaSucursalesDias = emp.sucursales.reduce((a,s) => a + s.dias_trabajados, 0);
+  const diasCompartidos = sumaSucursalesDias - emp.dias_trabajados;
+  const notaMultiSucursal = diasCompartidos > 0
+    ? `<div class="nota" style="margin-top:8px;">${diasCompartidos} día(s) marcaste en más de una sucursal — por eso el detalle por sucursal puede sumar más días que el total de arriba.</div>`
+    : '';
+
   const sucHtml = sucursalesHtml(emp.sucursales, 'emp');
 
   const pr = emp.proyeccion;
@@ -408,6 +414,7 @@ function render(mesKey, id, emp, meta){
             ${badge}
           </div>
         </div>
+        ${notaMultiSucursal}
       </div>
 
       <div class="card">
@@ -592,7 +599,9 @@ function renderSupervisor(sup, meta){
     });
   });
 
-  document.getElementById('contenido-sup').innerHTML = `
+  const tieneBono = sup.bono_total !== null && sup.bono_total !== undefined;
+
+  const bonoBloque = tieneBono ? `
     <div class="grid-2">
       <div class="card">
         <div class="section-title">Tu bono — ${meta.mes}</div>
@@ -606,15 +615,37 @@ function renderSupervisor(sup, meta){
         <div class="section-title">Por sucursal</div>
         ${sucRows}
       </div>
-    </div>
+    </div>` : `
+    <div class="card">
+      <div class="nota">Este período todavía no tiene el bono cargado — aquí solo puedes ver el avance de tu equipo.</div>
+    </div>`;
 
+  const tablaRangosSup = `
+    <div class="card">
+      <div class="section-title">Rangos de Gift Card 1 (referencia para tu equipo)</div>
+      <table class="tabla-rangos">
+        <thead><tr><th>Rango de venta consolidada</th><th>Gift Card 1</th></tr></thead>
+        <tbody>
+          <tr><td>$4,500 – $5,000</td><td>$10.00</td></tr>
+          <tr><td>$5,001 – $5,500</td><td>$20.00</td></tr>
+          <tr><td>$5,501 – $6,000</td><td>$40.00</td></tr>
+          <tr><td>$6,001 – $6,500</td><td>$60.00</td></tr>
+          <tr><td>$6,501 – $7,500</td><td>$80.00</td></tr>
+          <tr><td>$7,501 en adelante</td><td>$100.00</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  document.getElementById('contenido-sup').innerHTML = `
+    ${bonoBloque}
+    ${tablaRangosSup}
     <div class="card">
       <div class="section-title">Tu equipo (${sup.equipo.length}) — ${meta.mes_empleados || ''}</div>
       ${equipoHtml || '<div class="sin-datos">Sin colaboradores encontrados para este período.</div>'}
     </div>
   `;
 
-  dibujarBarraBono(sup.bono_ingresos, sup.bono_calidad, sup.bono_inventarios);
+  if(tieneBono) dibujarBarraBono(sup.bono_ingresos, sup.bono_calidad, sup.bono_inventarios);
 }
 
 function dibujarBarraBono(ingresos, calidad, inventarios){
