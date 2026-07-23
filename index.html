@@ -610,7 +610,12 @@ function renderSupervisorAnidado(s, prefix){
               <div class="suc-toggle" id="toggle-${empDetId}">ver detalle ▾</div>
             </div>
           </div>
-          <div class="dias-detalle" id="${empDetId}">${cumplimientoMiniHtml(e, empDetId)}${sucursalesHtml(e.sucursales, empDetId)}</div>
+          <div class="dias-detalle" id="${empDetId}">${cumplimientoMiniHtml(e, empDetId)}<div class="bono-mini-grid" style="margin-bottom:12px;">
+            <div class="bono-mini-card"><div class="bono-mini-num">${money(e.gc1)}</div><div class="bono-mini-lbl">Gift Card 1</div></div>
+            <div class="bono-mini-card"><div class="bono-mini-num">${money(e.bono_jefe)}</div><div class="bono-mini-lbl">Bono Jefe</div></div>
+            <div class="bono-mini-card"><div class="bono-mini-num">${money(e.venta_consolidada)}</div><div class="bono-mini-lbl">Venta consolidada</div></div>
+            <div class="bono-mini-card"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
+          </div>${sucursalesHtml(e.sucursales, empDetId)}</div>
         </div>`;
     });
 
@@ -770,14 +775,17 @@ function renderSupervisor(sup, meta){
       ${subordinadosHtml}
     </div>` : '';
 
+  const equipoPlanoBloque = subordinadosHtml ? '' : `
+    <div class="card">
+      <div class="section-title">Tu equipo (${sup.equipo.length}) — ${meta.mes_empleados || ''}</div>
+      ${equipoHtml || '<div class="sin-datos">Sin colaboradores encontrados para este período.</div>'}
+    </div>`;
+
   document.getElementById('contenido-sup').innerHTML = `
     ${bonoBloque}
     ${subordinadosBloque}
     ${tablaRangosSup}
-    <div class="card">
-      <div class="section-title">Tu equipo (${sup.equipo.length}) — ${meta.mes_empleados || ''}</div>
-      ${equipoHtml || '<div class="sin-datos">Sin colaboradores encontrados para este período.</div>'}
-    </div>
+    ${equipoPlanoBloque}
   `;
 
   if(tieneBono) dibujarBarraBono(sup.bono_ingresos, sup.bono_calidad, sup.bono_inventarios);
