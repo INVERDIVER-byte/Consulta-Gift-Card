@@ -32,6 +32,11 @@
   .card{background:rgba(255,255,255,0.94);border-radius:14px;border:1px solid var(--linea);padding:20px;margin-bottom:16px;}
   .grid-2{display:grid;grid-template-columns:1fr;gap:16px;}
   @media (min-width:680px){ .grid-2{grid-template-columns:1fr 1fr;} .grid-2 > .card{margin-bottom:0;} .card.full{grid-column:1 / -1;} }
+  .split-cols{display:flex;flex-direction:column;gap:16px;}
+  @media (min-width:680px){
+    .split-cols{flex-direction:row;align-items:flex-start;}
+    .split-cols > div{flex:1;display:flex;flex-direction:column;gap:16px;min-width:0;}
+  }
   #login-view .card{margin-top:24px;text-align:center;max-width:420px;margin-left:auto;margin-right:auto;}
   #login-view h2{font-size:16px;margin:0 0 6px;}
   #login-view p{font-size:13px;color:var(--texto-suave);margin:0 0 14px;}
@@ -64,6 +69,12 @@
   .barra-inner{height:100%;background:var(--verde);border-radius:6px;}
   .suc-item{border-top:1px solid var(--linea);padding:12px 0;}
   .suc-item:first-child{border-top:none;padding-top:0;}
+  .suc-item.nivel-3{
+    margin-left:14px;padding:8px 10px;background:var(--fondo);border-radius:8px;
+    border-top:none;border-left:3px solid var(--linea);margin-bottom:6px;
+  }
+  .suc-item.nivel-3 .suc-nombre{font-size:12.5px;font-weight:600;color:var(--texto-suave);}
+  .suc-item.nivel-3 .suc-venta{font-size:12.5px;}
   .suc-top{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
   .suc-nombre{font-size:14px;font-weight:700;}
   .suc-sub{font-size:12px;color:var(--texto-suave);margin-top:2px;}
@@ -315,7 +326,7 @@ function sucursalesHtml(sucursales, prefix){
       diasHtml += `<div class="dia-row ${d.califica ? 'ok' : 'no'}"><span class="dia-fecha">${d.fecha}</span><span class="dia-motivo">${motivo} · ${d.horas}</span><span class="dia-monto">${money(d.venta_asignada)}</span></div>`;
     });
     sucHtml += `
-      <div class="suc-item">
+      <div class="suc-item nivel-3">
         <div class="suc-top" onclick="toggleDetalle('${detalleId}')">
           <div>
             <div class="suc-nombre">${s.sucursal}</div>
@@ -478,8 +489,10 @@ function filtrarLista(inputId, listId){
 
   items.forEach(it => {
     const nombre = it.dataset.nombre || '';
-    const matchSelf = nombre.includes(term);
-    const descMatch = Array.from(it.querySelectorAll('[data-nombre]')).some(d => (d.dataset.nombre || '').includes(term));
+    const idEmp = (it.dataset.id || '').toLowerCase();
+    const matchSelf = nombre.includes(term) || idEmp.includes(term);
+    const descMatch = Array.from(it.querySelectorAll('[data-nombre]')).some(d =>
+      (d.dataset.nombre || '').includes(term) || (d.dataset.id || '').toLowerCase().includes(term));
     it.style.display = (matchSelf || descMatch) ? '' : 'none';
   });
 
@@ -677,7 +690,7 @@ function renderSupervisorAnidado(s, prefix){
       const badgeColor = pct >= 90 ? 'verde' : (pct >= 70 ? 'ambar' : 'rojo');
       const empDetId = sucDetId + '-emp' + eIdx;
       empRows += `
-        <div class="equipo-item" data-nombre="${e.nombre.toLowerCase()}">
+        <div class="equipo-item" data-nombre="${e.nombre.toLowerCase()}" data-id="${e.id}">
           <div class="equipo-top" onclick="toggleDetalle('${empDetId}')">
             <div>
               <div class="equipo-nombre">${coronaHtml(e)}<span class="badge" style="background:var(--fondo);color:var(--texto-suave);padding:2px 8px;">ID ${e.id}</span> ${e.nombre}</div>
@@ -693,7 +706,7 @@ function renderSupervisorAnidado(s, prefix){
             <div class="bono-mini-card"><div class="bono-mini-num">${money(e.bono_jefe)}</div><div class="bono-mini-lbl">Bono Jefe</div></div>
             <div class="bono-mini-card"><div class="bono-mini-num">${money(e.venta_consolidada)}</div><div class="bono-mini-lbl">Venta consolidada</div></div>
             <div class="bono-mini-card"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
-          </div>${sucursalesHtml(e.sucursales, empDetId)}</div>
+          </div><div style="font-size:10.5px;color:var(--texto-suave);font-weight:700;text-transform:uppercase;margin:10px 0 4px;">Detalle por sucursal</div>${sucursalesHtml(e.sucursales, empDetId)}</div>
         </div>`;
     });
 
@@ -790,7 +803,7 @@ function renderSupervisor(sup, meta){
           <div class="bono-mini-card"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
         </div>`;
       miembrosHtml += `
-        <div class="equipo-item" data-nombre="${e.nombre.toLowerCase()}">
+        <div class="equipo-item" data-nombre="${e.nombre.toLowerCase()}" data-id="${e.id}">
           <div class="equipo-top" onclick="toggleDetalle('${detalleId}')">
             <div>
               <div class="equipo-nombre">${coronaHtml(e)}<span class="badge" style="background:var(--fondo);color:var(--texto-suave);padding:2px 8px;">ID ${e.id}</span> ${e.nombre}</div>
@@ -801,7 +814,7 @@ function renderSupervisor(sup, meta){
               <div class="suc-toggle" id="toggle-${detalleId}">ver detalle ▾</div>
             </div>
           </div>
-          <div class="dias-detalle" id="${detalleId}">${cumplimientoMiniHtml(e, detalleId)}${resumenGanado}${sucursalesHtml(e.sucursales, detalleId)}</div>
+          <div class="dias-detalle" id="${detalleId}">${cumplimientoMiniHtml(e, detalleId)}${resumenGanado}<div style="font-size:10.5px;color:var(--texto-suave);font-weight:700;text-transform:uppercase;margin:10px 0 4px;">Detalle por sucursal</div>${sucursalesHtml(e.sucursales, detalleId)}</div>
         </div>`;
     });
     equipoHtml += `
@@ -864,14 +877,14 @@ function renderSupervisor(sup, meta){
   const subordinadosBloque = subordinadosHtml ? `
     <div class="card">
       <div class="section-title">Tus supervisores — desglose completo</div>
-      <input type="text" class="search-box" id="buscar-subordinados" placeholder="Buscar por nombre (supervisor o colaborador)…" oninput="filtrarLista('buscar-subordinados', 'lista-subordinados')">
+      <input type="text" class="search-box" id="buscar-subordinados" placeholder="Buscar por nombre o ID (supervisor o colaborador)…" oninput="filtrarLista('buscar-subordinados', 'lista-subordinados')">
       <div id="lista-subordinados">${subordinadosHtml}</div>
     </div>` : '';
 
   const equipoPlanoBloque = subordinadosHtml ? '' : `
     <div class="card">
       <div class="section-title">Tu equipo (${sup.equipo.length}) — ${meta.mes_empleados || ''}</div>
-      <input type="text" class="search-box" id="buscar-equipo" placeholder="Buscar colaborador por nombre…" oninput="filtrarLista('buscar-equipo', 'lista-equipo')">
+      <input type="text" class="search-box" id="buscar-equipo" placeholder="Buscar colaborador por nombre o ID…" oninput="filtrarLista('buscar-equipo', 'lista-equipo')">
       <div id="lista-equipo">${equipoHtml || '<div class="sin-datos">Sin colaboradores encontrados para este período.</div>'}</div>
     </div>`;
 
@@ -879,11 +892,15 @@ function renderSupervisor(sup, meta){
     ? topGanadoresHtml(sup.equipo, 10, 'Top 10 ganadores — todas las tiendas', true)
     : topGanadoresHtml(sup.equipo, 5, 'Top 5 ganadores de tu equipo', false);
 
+  const filaSuperiorGerente = esGerente ? `
+    <div class="split-cols">
+      <div>${subordinadosBloque}</div>
+      <div>${topBloque}${tablaRangosSup}</div>
+    </div>` : '';
+
   document.getElementById('contenido-sup').innerHTML = `
     ${bonoBloque}
-    ${subordinadosBloque}
-    ${topBloque}
-    ${tablaRangosSup}
+    ${esGerente ? filaSuperiorGerente : `<div class="grid-2">${topBloque}${tablaRangosSup}</div>`}
     ${equipoPlanoBloque}
   `;
 
