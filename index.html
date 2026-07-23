@@ -115,6 +115,9 @@
   .stat-destacado .lbl{color:var(--verde)!important;font-weight:700;}
 
   table.tabla-rangos{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px;}
+  .tabla-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:4px;}
+  .tabla-scroll table.tabla-rangos{margin-top:0;min-width:520px;}
+  .tabla-scroll table.tabla-rangos td, .tabla-scroll table.tabla-rangos th{white-space:nowrap;}
   table.tabla-rangos th{background:var(--azul-1);color:#fff;padding:7px 8px;font-size:11px;text-align:left;}
   table.tabla-rangos td{padding:7px 8px;border-bottom:1px solid var(--linea);}
   table.tabla-rangos tr.fila-actual td{background:var(--verde-fondo);font-weight:700;color:var(--verde);}
@@ -382,12 +385,12 @@ function render(mesKey, id, emp, meta){
     {label:'$6,501 – $7,500', monto:80, min:6501, max:7500},
     {label:'$7,501 en adelante', monto:100, min:7501, max:Infinity},
   ];
-  let tablaHtml = '<table class="tabla-rangos"><thead><tr><th>Rango de venta consolidada</th><th>Gift Card 1</th></tr></thead><tbody>';
+  let tablaHtml = '<div class="tabla-scroll"><table class="tabla-rangos"><thead><tr><th>Rango de venta consolidada</th><th>Gift Card 1</th></tr></thead><tbody>';
   RANGOS_GC1.forEach(rg => {
     const esActual = emp.venta_consolidada >= rg.min && emp.venta_consolidada <= rg.max;
     tablaHtml += `<tr class="${esActual ? 'fila-actual' : ''}"><td>${rg.label}${esActual ? ' ← estás aquí' : ''}</td><td>${money(rg.monto)}</td></tr>`;
   });
-  tablaHtml += '</tbody></table>';
+  tablaHtml += '</tbody></table></div>';
   if(emp.venta_consolidada < 4500){
     tablaHtml += `<div class="nota" style="margin-top:8px;">Aún no alcanzas el primer rango — te faltan ${money(4500 - emp.venta_consolidada)} en venta consolidada.</div>`;
   }
@@ -584,10 +587,12 @@ function topGanadoresHtml(equipo, n, titulo, incluirSupervisor){
   return `
     <div class="card">
       <div class="section-title">${titulo}</div>
+      <div class="tabla-scroll">
       <table class="tabla-rangos">
         <thead><tr><th></th><th>ID</th><th>Nombre</th><th>Sucursal</th>${incluirSupervisor ? '<th>Supervisor</th>' : ''}<th style="text-align:right;">Venta</th><th style="text-align:right;">Monto</th></tr></thead>
         <tbody>${filas}</tbody>
       </table>
+      </div>
     </div>`;
 }
 
@@ -858,6 +863,7 @@ function renderSupervisor(sup, meta){
   const tablaRangosSup = `
     <div class="card">
       <div class="section-title">Rangos de Gift Card 1 (referencia para tu equipo)</div>
+      <div class="tabla-scroll">
       <table class="tabla-rangos">
         <thead><tr><th>Rango de venta consolidada</th><th>Gift Card 1</th></tr></thead>
         <tbody>
@@ -869,6 +875,7 @@ function renderSupervisor(sup, meta){
           <tr><td>$7,501 en adelante</td><td>$100.00</td></tr>
         </tbody>
       </table>
+      </div>
     </div>`;
 
   let subordinadosHtml = '';
