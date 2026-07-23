@@ -550,6 +550,31 @@ function cumplimientoMiniHtml(e, idPrefix){
     ${nota}`;
 }
 
+function topGanadoresHtml(equipo, n, titulo, incluirSupervisor){
+  const top = [...equipo].sort((a,b) => b.total - a.total).slice(0, n);
+  if(!top.length) return '';
+  let filas = '';
+  top.forEach((e, i) => {
+    filas += `
+      <tr>
+        <td style="font-weight:800;color:var(--azul-1);">#${i+1}</td>
+        <td>${coronaHtml(e)}ID ${e.id}</td>
+        <td>${e.nombre}</td>
+        <td>${e.sucursal_principal}</td>
+        ${incluirSupervisor ? `<td>${e.supervisor || ''}</td>` : ''}
+        <td style="font-weight:800;text-align:right;">${money(e.total)}</td>
+      </tr>`;
+  });
+  return `
+    <div class="card">
+      <div class="section-title">${titulo}</div>
+      <table class="tabla-rangos">
+        <thead><tr><th></th><th>ID</th><th>Nombre</th><th>Sucursal</th>${incluirSupervisor ? '<th>Supervisor</th>' : ''}<th style="text-align:right;">Monto</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>`;
+}
+
 function cambiarTab(tab){
   document.getElementById('tab-empleado').classList.toggle('tab-activo', tab === 'empleado');
   document.getElementById('tab-supervisor').classList.toggle('tab-activo', tab === 'supervisor');
@@ -699,6 +724,7 @@ function renderSupervisorAnidado(s, prefix){
       </div>
       <div class="dias-detalle" id="${detalleId}">
         ${resumenBono}
+        ${topGanadoresHtml(s.equipo || [], 5, 'Top 5 ganadores de este supervisor', false)}
         ${sucursalesHtmlChain || '<div class="sin-datos">Sin colaboradores este período.</div>'}
       </div>
     </div>`;
@@ -747,9 +773,10 @@ function renderSupervisor(sup, meta){
 
   let equipoHtml = '';
   let idxGlobal = 0;
-  Object.keys(porSucursal).sort().forEach(suc => {
+  Object.keys(porSucursal).sort().forEach((suc, sucIdx) => {
     const miembros = porSucursal[suc];
-    equipoHtml += `<div class="equipo-suc-header">${suc} <span style="font-weight:400;color:var(--texto-suave);">(${miembros.length})</span></div>`;
+    const grupoId = 'sup-grupo-' + sucIdx;
+    let miembrosHtml = '';
     miembros.forEach(e => {
       const pct = e.dias_trabajados > 0 ? Math.round(100 * e.dias_califican / e.dias_trabajados) : 0;
       const badgeColor = pct >= 90 ? 'verde' : (pct >= 70 ? 'ambar' : 'rojo');
@@ -762,7 +789,7 @@ function renderSupervisor(sup, meta){
           <div class="bono-mini-card"><div class="bono-mini-num">${money(e.venta_consolidada)}</div><div class="bono-mini-lbl">Venta consolidada</div></div>
           <div class="bono-mini-card"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
         </div>`;
-      equipoHtml += `
+      miembrosHtml += `
         <div class="equipo-item" data-nombre="${e.nombre.toLowerCase()}">
           <div class="equipo-top" onclick="toggleDetalle('${detalleId}')">
             <div>
@@ -777,9 +804,21 @@ function renderSupervisor(sup, meta){
           <div class="dias-detalle" id="${detalleId}">${cumplimientoMiniHtml(e, detalleId)}${resumenGanado}${sucursalesHtml(e.sucursales, detalleId)}</div>
         </div>`;
     });
+    equipoHtml += `
+      <div class="suc-item">
+        <div class="suc-top" onclick="toggleDetalle('${grupoId}')">
+          <div>
+            <div class="suc-nombre">${suc}</div>
+            <div class="suc-sub">${miembros.length} colaborador(es)</div>
+          </div>
+          <div class="suc-toggle" id="toggle-${grupoId}">desglosar ▾</div>
+        </div>
+        <div class="dias-detalle" id="${grupoId}">${miembrosHtml}</div>
+      </div>`;
   });
 
   const tieneBono = sup.bono_total !== null && sup.bono_total !== undefined;
+  const esGerente = sup.supervisores_subordinados && sup.supervisores_subordinados.length > 0;
 
   const bonoBloque = tieneBono ? `
     <div class="grid-2">
@@ -795,10 +834,10 @@ function renderSupervisor(sup, meta){
         <div class="section-title">Por sucursal</div>
         ${sucRows}
       </div>
-    </div>` : `
+    </div>` : (esGerente ? '' : `
     <div class="card">
       <div class="nota">Este período todavía no tiene el bono cargado — aquí solo puedes ver el avance de tu equipo.</div>
-    </div>`;
+    </div>`);
 
   const tablaRangosSup = `
     <div class="card">
@@ -836,9 +875,14 @@ function renderSupervisor(sup, meta){
       <div id="lista-equipo">${equipoHtml || '<div class="sin-datos">Sin colaboradores encontrados para este período.</div>'}</div>
     </div>`;
 
+  const topBloque = esGerente
+    ? topGanadoresHtml(sup.equipo, 10, 'Top 10 ganadores — todas las tiendas', true)
+    : topGanadoresHtml(sup.equipo, 5, 'Top 5 ganadores de tu equipo', false);
+
   document.getElementById('contenido-sup').innerHTML = `
     ${bonoBloque}
     ${subordinadosBloque}
+    ${topBloque}
     ${tablaRangosSup}
     ${equipoPlanoBloque}
   `;
