@@ -70,13 +70,19 @@
   .barra-outer{height:9px;background:var(--linea);border-radius:6px;overflow:hidden;margin:8px 0 4px;}
   .barra-inner{height:100%;background:var(--verde);border-radius:6px;}
   .suc-item{border-top:1px solid var(--linea);padding:12px 0;}
-  .suc-item:first-child{border-top:none;padding-top:0;}
+  .suc-item:first-child:not(.nivel-1):not(.nivel-3){border-top:none;padding-top:0;}
   .suc-item.nivel-3{
     margin-left:14px;padding:8px 10px;background:var(--fondo);border-radius:8px;
     border-top:none;border-left:3px solid var(--linea);margin-bottom:6px;
   }
   .suc-item.nivel-3 .suc-nombre{font-size:12.5px;font-weight:600;color:var(--texto-suave);}
   .suc-item.nivel-3 .suc-venta{font-size:12.5px;}
+  .suc-item.nivel-1{
+    background:var(--azul-1);border-radius:10px;padding:12px 14px;margin-bottom:10px;border-top:none;
+  }
+  .suc-item.nivel-1 .suc-nombre{color:#fff;font-size:14.5px;}
+  .suc-item.nivel-1 .suc-sub{color:#FBD3D6;}
+  .suc-item.nivel-1 .suc-toggle{color:#FFE607;font-weight:700;}
   .suc-top{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
   .suc-nombre{font-size:14px;font-weight:700;}
   .suc-sub{font-size:12px;color:var(--texto-suave);margin-top:2px;}
@@ -719,10 +725,10 @@ function renderSupervisorAnidado(s, prefix){
     });
 
     sucursalesHtmlChain += `
-      <div class="suc-item">
+      <div class="suc-item nivel-1">
         <div class="suc-top" onclick="toggleDetalle('${sucDetId}')">
           <div>
-            <div class="suc-nombre">${sucNombre}</div>
+            <div class="suc-nombre">📍 ${sucNombre}</div>
             <div class="suc-sub">${miembros.length} colaborador(es)${bonoInfo}</div>
           </div>
           <div class="suc-toggle" id="toggle-${sucDetId}">ver personal ▾</div>
@@ -826,10 +832,10 @@ function renderSupervisor(sup, meta){
         </div>`;
     });
     equipoHtml += `
-      <div class="suc-item">
+      <div class="suc-item nivel-1">
         <div class="suc-top" onclick="toggleDetalle('${grupoId}')">
           <div>
-            <div class="suc-nombre">${suc}</div>
+            <div class="suc-nombre">📍 ${suc}</div>
             <div class="suc-sub">${miembros.length} colaborador(es)</div>
           </div>
           <div class="suc-toggle" id="toggle-${grupoId}">desglosar ▾</div>
