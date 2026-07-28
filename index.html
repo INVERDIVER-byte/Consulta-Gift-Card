@@ -30,6 +30,17 @@
   .topbar p{margin:3px 0 0;font-size:11.5px;color:#FBD3D6;}
   .wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px;position:relative;z-index:1;}
   @media (min-width:1200px){ .wrap{max-width:1180px;} }
+  @media (max-width:380px){
+    .wrap{padding:14px 10px 50px;}
+    .card{padding:14px;}
+    .stat .num{font-size:16px;}
+    .donut-cumplimiento-wrap{width:88px;height:88px;}
+    .topbar{padding:14px 12px;gap:10px;}
+    .topbar img{width:36px;height:36px;}
+    .topbar h1{font-size:16px;}
+    .bono-mini-grid{gap:6px;}
+    .bono-mini-num{font-size:13px;}
+  }
   .card{background:rgba(255,255,255,0.94);border-radius:14px;border:1px solid var(--linea);padding:20px;margin-bottom:16px;}
   .grid-2{display:grid;grid-template-columns:1fr;gap:16px;}
   @media (min-width:680px){ .grid-2{grid-template-columns:1fr 1fr;} .grid-2 > .card{margin-bottom:0;} .card.full{grid-column:1 / -1;} }
@@ -429,14 +440,14 @@ function render(mesKey, id, emp, meta){
     <div class="grid-2">
       <div class="card">
         <div class="section-title">Cumplimiento a la fecha</div>
-        <div style="display:flex;align-items:center;gap:16px;">
-          <div style="position:relative;width:110px;height:110px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div class="donut-cumplimiento-wrap" style="position:relative;width:110px;height:110px;flex-shrink:0;">
             <canvas id="donutCumplimiento" role="img" aria-label="Cumplimiento ${pct} por ciento"></canvas>
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
               <div style="font-size:20px;font-weight:800;">${pct}%</div>
             </div>
           </div>
-          <div style="flex:1;">
+          <div style="flex:1;min-width:160px;">
             <div class="stat-row" style="margin-bottom:8px;">
               <div class="stat"><div class="num">${emp.dias_trabajados}</div><div class="lbl">trabajados</div></div>
               <div class="stat"><div class="num">${emp.dias_califican}</div><div class="lbl">califican</div></div>
@@ -751,7 +762,7 @@ function renderSupervisorAnidado(s, prefix){
       </div>
       <div class="dias-detalle" id="${detalleId}">
         ${resumenBono}
-        ${topGanadoresHtml(s.equipo || [], 5, 'Top 5 ganadores de este supervisor', false)}
+        ${topGanadoresHtml(s.equipo || [], 10, 'Top 10 ganadores de este supervisor', false)}
         ${sucursalesHtmlChain || '<div class="sin-datos">Sin colaboradores este período.</div>'}
       </div>
     </div>`;
@@ -906,7 +917,7 @@ function renderSupervisor(sup, meta){
 
   const topBloque = esGerente
     ? topGanadoresHtml(sup.equipo, 10, 'Top 10 ganadores — todas las tiendas', true)
-    : topGanadoresHtml(sup.equipo, 5, 'Top 5 ganadores de tu equipo', false);
+    : topGanadoresHtml(sup.equipo, 10, 'Top 10 ganadores de tu equipo', false);
 
   const filaSuperiorGerente = esGerente ? `
     <div class="split-cols">
