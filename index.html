@@ -605,7 +605,7 @@ function topGanadoresHtml(equipo, n, titulo, incluirSupervisor){
     filas += `
       <tr>
         <td style="font-weight:800;color:var(--azul-1);">#${i+1}</td>
-        <td>${coronaHtml(e)}ID ${e.id}</td>
+        <td>${coronaHtml(e)}${e.id}</td>
         <td>${e.nombre}</td>
         <td>${e.sucursal_principal}</td>
         ${incluirSupervisor ? `<td>${e.supervisor || ''}</td>` : ''}
