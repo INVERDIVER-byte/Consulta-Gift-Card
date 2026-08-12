@@ -598,7 +598,9 @@ function cumplimientoMiniHtml(e, idPrefix){
 }
 
 function topGanadoresHtml(equipo, n, titulo, incluirSupervisor){
-  const top = [...equipo].sort((a,b) => b.total - a.total).slice(0, n);
+  const top = [...equipo]
+    .sort((a,b) => incluirSupervisor ? (b.venta_consolidada - a.venta_consolidada) : (b.total - a.total))
+    .slice(0, n);
   if(!top.length) return '';
   let filas = '';
   top.forEach((e, i) => {
