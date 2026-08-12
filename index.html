@@ -425,7 +425,9 @@ function render(mesKey, id, emp, meta){
   }
 
   let gc2Txt;
-  if(pr.aplica_gc2){
+  if(emp.gc2 > 0){
+    gc2Txt = `Ya se te asignó ${money(emp.gc2)} de Gift Card 2 este período.`;
+  } else if(pr.aplica_gc2){
     gc2Txt = 'Ya cumples los KPI establecidos para ganar Gift Card 2 (venta y días calificados). El monto final depende del presupuesto de tu sucursal, pero vas muy bien encaminado.';
   } else {
     const partes = [];
@@ -471,6 +473,11 @@ function render(mesKey, id, emp, meta){
         <div class="stat stat-destacado"><div class="num">${money(emp.gc1 + emp.bono_jefe)}</div><div class="lbl">Gift Card 1 hoy</div></div>
         <div class="stat"><div class="num">${money(pr.tier_proyectado)}</div><div class="lbl">proyectado a fin de mes</div></div>
       </div>
+      ${emp.gc2 > 0 ? `
+      <div class="stat-row" style="margin-top:8px;">
+        <div class="stat stat-destacado"><div class="num">${money(emp.gc2)}</div><div class="lbl">Gift Card 2</div></div>
+        <div class="stat"><div class="num">${money(emp.total)}</div><div class="lbl">Total ganado (GC1+GC2)</div></div>
+      </div>` : ''}
       <div class="tier-track">${trackHtml}</div>
       <div class="tier-labels"><span>$10</span><span>$20</span><span>$40</span><span>$60</span><span>$80</span><span>$100</span></div>
       ${tablaHtml}
@@ -598,6 +605,7 @@ function topGanadoresHtml(equipo, n, titulo, incluirSupervisor){
         <td>${e.sucursal_principal}</td>
         ${incluirSupervisor ? `<td>${e.supervisor || ''}</td>` : ''}
         <td style="text-align:right;">${money(e.venta_consolidada)}</td>
+        <td style="text-align:right;">${money(e.gc2 || 0)}</td>
         <td style="font-weight:800;text-align:right;">${money(e.total)}</td>
       </tr>`;
   });
@@ -606,7 +614,7 @@ function topGanadoresHtml(equipo, n, titulo, incluirSupervisor){
       <div class="section-title">${titulo}</div>
       <div class="tabla-scroll">
       <table class="tabla-rangos">
-        <thead><tr><th></th><th>ID</th><th>Nombre</th><th>Sucursal</th>${incluirSupervisor ? '<th>Supervisor</th>' : ''}<th style="text-align:right;">Venta</th><th style="text-align:right;">Monto</th></tr></thead>
+        <thead><tr><th></th><th>ID</th><th>Nombre</th><th>Sucursal</th>${incluirSupervisor ? '<th>Supervisor</th>' : ''}<th style="text-align:right;">Venta</th><th style="text-align:right;">GC2</th><th style="text-align:right;">Monto</th></tr></thead>
         <tbody>${filas}</tbody>
       </table>
       </div>
@@ -729,8 +737,9 @@ function renderSupervisorAnidado(s, prefix){
           <div class="dias-detalle" id="${empDetId}">${cumplimientoMiniHtml(e, empDetId)}<div class="bono-mini-grid" style="margin-bottom:12px;">
             <div class="bono-mini-card"><div class="bono-mini-num">${money(e.gc1)}</div><div class="bono-mini-lbl">Gift Card 1</div></div>
             <div class="bono-mini-card"><div class="bono-mini-num">${money(e.bono_jefe)}</div><div class="bono-mini-lbl">Bono Jefe</div></div>
+            <div class="bono-mini-card"><div class="bono-mini-num">${money(e.gc2)}</div><div class="bono-mini-lbl">Gift Card 2</div></div>
             <div class="bono-mini-card"><div class="bono-mini-num">${money(e.venta_consolidada)}</div><div class="bono-mini-lbl">Venta consolidada</div></div>
-            <div class="bono-mini-card"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
+            <div class="bono-mini-card" style="grid-column:1 / -1;"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
           </div><div style="font-size:10.5px;color:var(--texto-suave);font-weight:700;text-transform:uppercase;margin:10px 0 4px;">Detalle por sucursal</div>${sucursalesHtml(e.sucursales, empDetId)}</div>
         </div>`;
     });
@@ -824,8 +833,9 @@ function renderSupervisor(sup, meta){
         <div class="bono-mini-grid" style="margin-bottom:12px;">
           <div class="bono-mini-card"><div class="bono-mini-num">${money(e.gc1)}</div><div class="bono-mini-lbl">Gift Card 1</div></div>
           <div class="bono-mini-card"><div class="bono-mini-num">${money(e.bono_jefe)}</div><div class="bono-mini-lbl">Bono Jefe</div></div>
+          <div class="bono-mini-card"><div class="bono-mini-num">${money(e.gc2)}</div><div class="bono-mini-lbl">Gift Card 2</div></div>
           <div class="bono-mini-card"><div class="bono-mini-num">${money(e.venta_consolidada)}</div><div class="bono-mini-lbl">Venta consolidada</div></div>
-          <div class="bono-mini-card"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
+          <div class="bono-mini-card" style="grid-column:1 / -1;"><div class="bono-mini-num">${money(e.total)}</div><div class="bono-mini-lbl">Total ganado</div></div>
         </div>`;
       miembrosHtml += `
         <div class="equipo-item" data-nombre="${e.nombre.toLowerCase()}" data-id="${e.id}">
