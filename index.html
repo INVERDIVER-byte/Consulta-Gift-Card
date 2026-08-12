@@ -131,6 +131,14 @@
   .stat-destacado .num{color:var(--verde)!important;font-size:23px!important;}
   .stat-destacado .lbl{color:var(--verde)!important;font-weight:700;}
 
+  .stat-gc2{background:#E7F0FB!important;border:1.5px solid #2E6FBA;}
+  .stat-gc2 .num{color:#2E6FBA!important;font-size:23px!important;}
+  .stat-gc2 .lbl{color:#2E6FBA!important;font-weight:700;}
+
+  .stat-total{background:var(--azul-1)!important;border:1.5px solid var(--azul-1);}
+  .stat-total .num{color:#fff!important;font-size:23px!important;}
+  .stat-total .lbl{color:var(--amarillo)!important;font-weight:700;}
+
   table.tabla-rangos{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px;}
   .tabla-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:4px;}
   .tabla-scroll table.tabla-rangos{margin-top:0;min-width:520px;}
@@ -416,14 +424,6 @@ function render(mesKey, id, emp, meta){
     ? `Con tu ritmo actual (${money(pr.ritmo_diario)}/día proyectado), si continúas así llegarías a ${money(pr.venta_proyectada)} en ventas consolidadas. Te faltarían ${money(pr.siguiente_tier.venta_faltante)} en venta para subir a la Gift Card de ${money(pr.siguiente_tier.monto)}.`
     : `Con tu ritmo actual, proyectas ${money(pr.venta_proyectada)} en ventas consolidadas — ¡ya alcanzarías el nivel máximo de Gift Card 1!`;
 
-  let jefeHtml = '';
-  if(pr.es_jefe){
-    const falta = Math.max(0, pr.bono_jefe_umbral - pr.venta_proyectada);
-    jefeHtml = `<div class="proy-linea">` + (falta > 0
-      ? `<span class="k">Bono Jefe de Sucursal (+${money(pr.bono_jefe_monto)})</span><span class="v">te faltan ${money(falta)}</span>`
-      : `<span class="k">Bono Jefe de Sucursal</span><span class="v">en camino a calificar</span>`) + `</div>`;
-  }
-
   let gc2Txt;
   if(emp.gc2 > 0){
     gc2Txt = `Ya se te asignó ${money(emp.gc2)} de Gift Card 2 este período.`;
@@ -470,19 +470,24 @@ function render(mesKey, id, emp, meta){
     <div class="card">
       <div class="section-title">Lo que llevas ganado a la fecha</div>
       <div class="stat-row">
-        <div class="stat stat-destacado"><div class="num">${money(emp.gc1 + emp.bono_jefe)}</div><div class="lbl">Gift Card 1 hoy</div></div>
-        <div class="stat"><div class="num">${money(pr.tier_proyectado)}</div><div class="lbl">proyectado a fin de mes</div></div>
+        <div class="stat stat-destacado"><div class="num">${money(emp.gc1)}</div><div class="lbl">Gift Card 1 (por venta)</div></div>
+        <div class="stat stat-gc2"><div class="num">${money(emp.gc2)}</div><div class="lbl">Gift Card 2 (por KPI)</div></div>
       </div>
-      ${emp.gc2 > 0 ? `
+      ${pr.es_jefe ? `
       <div class="stat-row" style="margin-top:8px;">
-        <div class="stat stat-destacado"><div class="num">${money(emp.gc2)}</div><div class="lbl">Gift Card 2</div></div>
-        <div class="stat"><div class="num">${money(emp.total)}</div><div class="lbl">Total ganado (GC1+GC2)</div></div>
-      </div>` : ''}
+        <div class="stat ${emp.bono_jefe > 0 ? 'stat-destacado' : ''}">
+          <div class="num">${money(emp.bono_jefe)}</div>
+          <div class="lbl">Bono Jefe de Sucursal ${emp.bono_jefe > 0 ? '(¡ganado!)' : '(vendiendo +' + money(pr.bono_jefe_umbral) + ')'}</div>
+        </div>
+        <div class="stat stat-total"><div class="num">${money(emp.total)}</div><div class="lbl">Total ganado</div></div>
+      </div>` : `
+      <div class="stat-row" style="margin-top:8px;">
+        <div class="stat stat-total" style="flex:1;"><div class="num">${money(emp.total)}</div><div class="lbl">Total ganado (GC1+GC2)</div></div>
+      </div>`}
       <div class="tier-track">${trackHtml}</div>
       <div class="tier-labels"><span>$10</span><span>$20</span><span>$40</span><span>$60</span><span>$80</span><span>$100</span></div>
       ${tablaHtml}
       <div class="nota" style="margin-top:10px;">${sigTxt}</div>
-      ${jefeHtml}
       <div class="nota" style="margin-top:8px;">${gc2Txt}</div>
     </div>
   `;
