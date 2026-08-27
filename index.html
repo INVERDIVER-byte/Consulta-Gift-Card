@@ -673,6 +673,11 @@ async function buscarSupervisor(){
     err.style.display = 'block';
     return;
   }
+  if(sup.activo === false){
+    err.textContent = 'Este código ya no está activo. Verifica con tu administrador.';
+    err.style.display = 'block';
+    return;
+  }
   SUP_CODIGO_ACTUAL = codigo;
   renderSupervisor(sup, data.meta);
   document.getElementById('login-view').style.display = 'none';
